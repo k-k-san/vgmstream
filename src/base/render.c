@@ -507,3 +507,37 @@ int render_vgmstream(sample_t* buf, int32_t sample_count, VGMSTREAM* vgmstream) 
 
     return samples_done;
 }
+
+/* Added by k-san */
+int render_vgmstream_as_float(float* dst, sample_t* buffer, int32_t sample_count, VGMSTREAM* vgmstream) {
+    int samples_done;
+    int i;
+
+    samples_done = render_vgmstream(buffer, sample_count, vgmstream);
+
+    const float half = 0x8000;
+    for (i = 0; i < samples_done * vgmstream->channels; i++)
+        dst[i] = buffer[i] / half;
+
+    return samples_done;
+}
+
+/* Added by k-san */
+int render_vgmstream_all_as_float(float* dst, VGMSTREAM* vgmstream) {
+    int32_t len_samples = vgmstream->num_samples;
+    sample_t* buf = NULL;
+    int samples_done;
+
+    buf = malloc(len_samples * sizeof(sample_t) * vgmstream->channels);
+    if (!buf) {
+        fprintf(stderr, "failed allocating output buffer\n");
+        free(buf);
+        return -1;
+    }
+
+    samples_done = render_vgmstream_as_float(dst, buf, len_samples, vgmstream);
+
+    free(buf);
+
+    return samples_done;
+}

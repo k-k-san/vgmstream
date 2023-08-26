@@ -676,6 +676,106 @@ static VGMSTREAM* init_vgmstream_internal(STREAMFILE* sf) {
     return NULL;
 }
 
+/* Added by k-san */
+static VGMSTREAM* init_awb_vgmstream_internal(STREAMFILE* sf) {
+    if (!sf)
+        return NULL;
+
+    init_vgmstream_t init_vgmstream_function = init_vgmstream_awb;
+
+    /* call init function and see if valid VGMSTREAM was returned */
+    VGMSTREAM* vgmstream = init_vgmstream_function(sf);
+    if (!vgmstream)
+        return NULL;
+
+    /* fail if there is nothing/too much to play (<=0 generates empty files, >N writes GBs of garbage) */
+    if (vgmstream->num_samples <= 0 || vgmstream->num_samples > VGMSTREAM_MAX_NUM_SAMPLES) {
+        VGM_LOG("VGMSTREAM: wrong num_samples %i\n", vgmstream->num_samples);
+        close_vgmstream(vgmstream);
+        return NULL;
+    }
+
+    /* everything should have a reasonable sample rate */
+    if (vgmstream->sample_rate < VGMSTREAM_MIN_SAMPLE_RATE || vgmstream->sample_rate > VGMSTREAM_MAX_SAMPLE_RATE) {
+        VGM_LOG("VGMSTREAM: wrong sample_rate %i\n", vgmstream->sample_rate);
+        close_vgmstream(vgmstream);
+        return NULL;
+    }
+
+    /* sanify loops and remove bad metadata */
+    if (vgmstream->loop_flag) {
+        if (vgmstream->loop_end_sample <= vgmstream->loop_start_sample
+            || vgmstream->loop_end_sample > vgmstream->num_samples
+            || vgmstream->loop_start_sample < 0) {
+            VGM_LOG("VGMSTREAM: wrong loops ignored (lss=%i, lse=%i, ns=%i)\n",
+                vgmstream->loop_start_sample, vgmstream->loop_end_sample, vgmstream->num_samples);
+            vgmstream->loop_flag = 0;
+            vgmstream->loop_start_sample = 0;
+            vgmstream->loop_end_sample = 0;
+        }
+    }
+
+    /* test if candidate for dual stereo */
+    if (vgmstream->channels == 1 && vgmstream->allow_dual_stereo == 1) {
+        try_dual_file_stereo(vgmstream, sf, init_vgmstream_function);
+    }
+
+    /* clean as loops are readable metadata but loop fields may contain garbage
+        * (done *after* dual stereo as it needs loop fields to match) */
+    if (!vgmstream->loop_flag) {
+        vgmstream->loop_start_sample = 0;
+        vgmstream->loop_end_sample = 0;
+    }
+
+#ifdef VGM_USE_FFMPEG
+    /* check FFmpeg streams here, for lack of a better place */
+    if (vgmstream->coding_type == coding_FFmpeg) {
+        int ffmpeg_subsongs = ffmpeg_get_subsong_count(vgmstream->codec_data);
+        if (ffmpeg_subsongs && !vgmstream->num_streams) {
+            vgmstream->num_streams = ffmpeg_subsongs;
+        }
+    }
+#endif
+
+    /* some players are picky with incorrect channel layouts */
+    if (vgmstream->channel_layout > 0) {
+        int output_channels = vgmstream->channels;
+        int ch, count = 0, max_ch = 32;
+        for (ch = 0; ch < max_ch; ch++) {
+            int bit = (vgmstream->channel_layout >> ch) & 1;
+            if (ch > 17 && bit) {
+                VGM_LOG("VGMSTREAM: wrong bit %i in channel_layout %x\n", ch, vgmstream->channel_layout);
+                vgmstream->channel_layout = 0;
+                break;
+            }
+            count += bit;
+        }
+
+        if (count > output_channels) {
+            VGM_LOG("VGMSTREAM: wrong totals %i in channel_layout %x\n", count, vgmstream->channel_layout);
+            vgmstream->channel_layout = 0;
+        }
+    }
+
+    /* files can have thousands subsongs, but let's put a limit */
+    if (vgmstream->num_streams < 0 || vgmstream->num_streams > VGMSTREAM_MAX_SUBSONGS) {
+        VGM_LOG("VGMSTREAM: wrong num_streams (ns=%i)\n", vgmstream->num_streams);
+        close_vgmstream(vgmstream);
+        return NULL;
+    }
+
+    /* save info */
+    /* stream_index 0 may be used by plugins to signal "vgmstream default" (IOW don't force to 1) */
+    if (vgmstream->stream_index == 0) {
+        vgmstream->stream_index = sf->stream_index;
+    }
+
+
+    setup_vgmstream(vgmstream); /* final setup */
+
+    return vgmstream;
+}
+
 void setup_vgmstream(VGMSTREAM* vgmstream) {
 
     /* save start things so we can restart when seeking */

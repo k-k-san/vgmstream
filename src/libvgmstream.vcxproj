@@ -22,10 +22,11 @@
     <ProjectGuid>{54A6AD11-5369-4895-A06F-E255ABB99B11}</ProjectGuid>
     <RootNamespace>libvgmstream</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <!--<CharacterSet>Unicode</CharacterSet>-->
     <!-- affects WinAPi *A/*W functions -->
   </PropertyGroup>
@@ -78,9 +79,17 @@
       <PreprocessorDefinitions>_WIN32_WINNT=0x501;WIN32;NDEBUG;_LIB;$(VLibPreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(VCliAdditionalDependencies64);%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="api.h" />
+    <ClInclude Include="extensions.h" />
     <ClInclude Include="streamfile.h" />
     <ClInclude Include="streamtypes.h" />
     <ClInclude Include="util.h" />
@@ -192,6 +201,7 @@
     <ClInclude Include="util\text_reader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="extensions.c" />
     <ClCompile Include="formats.c" />
     <ClCompile Include="streamfile.c" />
     <ClCompile Include="util.c" />

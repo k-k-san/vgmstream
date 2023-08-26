@@ -4,6 +4,14 @@
 #ifndef _STREAMFILE_H
 #define _STREAMFILE_H
 
+#ifdef _WINDLL
+#define DECLSPEC __declspec(dllexport)
+#define STDCALL __stdcall
+#else
+#define DECLSPEC
+#define STDCALL
+#endif
+
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
@@ -81,7 +89,7 @@ typedef struct _STREAMFILE {
 
 /* Opens a standard STREAMFILE, opening from path.
  * Uses stdio (FILE) for operations, thus plugins may not want to use it. */
-STREAMFILE* open_stdio_streamfile(const char* filename);
+DECLSPEC STREAMFILE* STDCALL open_stdio_streamfile(const char* filename);
 
 /* Opens a standard STREAMFILE from a pre-opened FILE. */
 STREAMFILE* open_stdio_streamfile_by_file(FILE* file, const char* filename);
@@ -136,7 +144,7 @@ STREAMFILE* reopen_streamfile(STREAMFILE* sf, size_t buffer_size);
 
 
 /* close a file, destroy the STREAMFILE object */
-static inline void close_streamfile(STREAMFILE* sf) {
+DECLSPEC extern inline void STDCALL close_streamfile(STREAMFILE* sf) {
     if (sf != NULL)
         sf->close(sf);
 }

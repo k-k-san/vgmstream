@@ -4,6 +4,14 @@
 #ifndef _PLUGINS_H_
 #define _PLUGINS_H_
 
+#ifdef _WINDLL
+#define DECLSPEC __declspec(dllexport)
+#define STDCALL __stdcall
+#else
+#define DECLSPEC
+#define STDCALL
+#endif
+
 #include "../streamfile.h"
 #include "../vgmstream.h"
 
@@ -45,7 +53,7 @@ typedef struct {
 } vgmstream_cfg_t;
 
 // WARNING: these are not stable and may change anytime without notice
-void vgmstream_apply_config(VGMSTREAM* vgmstream, vgmstream_cfg_t* pcfg);
+DECLSPEC void STDCALL vgmstream_apply_config(VGMSTREAM* vgmstream, vgmstream_cfg_t* pcfg);
 int32_t vgmstream_get_samples(VGMSTREAM* vgmstream);
 int vgmstream_get_play_forever(VGMSTREAM* vgmstream);
 void vgmstream_set_play_forever(VGMSTREAM* vgmstream, int enabled);

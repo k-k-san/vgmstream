@@ -4,6 +4,14 @@
 #ifndef _VGMSTREAM_H
 #define _VGMSTREAM_H
 
+#ifdef _WINDLL
+#define DECLSPEC __declspec(dllexport)
+#define STDCALL __stdcall
+#else
+#define DECLSPEC
+#define STDCALL
+#endif
+
 /* Due mostly to licensing issues, Vorbis, MPEG, G.722.1, etc decoding is done by external libraries.
  * Libs are disabled by default, defined on compile-time for builds that support it */
 //#define VGM_USE_VORBIS
@@ -333,30 +341,34 @@ typedef struct {
 /* -------------------------------------------------------------------------*/
 
 /* do format detection, return pointer to a usable VGMSTREAM, or NULL on failure */
-VGMSTREAM* init_vgmstream(const char* const filename);
+DECLSPEC VGMSTREAM* STDCALL init_vgmstream(const char* const filename);
 
 /* init with custom IO via streamfile */
-VGMSTREAM* init_vgmstream_from_STREAMFILE(STREAMFILE* sf);
+DECLSPEC VGMSTREAM* STDCALL init_vgmstream_from_STREAMFILE(STREAMFILE* sf);
 
 /* reset a VGMSTREAM to start of stream */
 void reset_vgmstream(VGMSTREAM* vgmstream);
 
 /* close an open vgmstream */
-void close_vgmstream(VGMSTREAM* vgmstream);
+DECLSPEC void STDCALL close_vgmstream(VGMSTREAM* vgmstream);
 
 /* calculate the number of samples to be played based on looping parameters */
 int32_t get_vgmstream_play_samples(double looptimes, double fadeseconds, double fadedelayseconds, VGMSTREAM* vgmstream);
 
 /* Decode data into sample buffer. Returns < sample_count on stream end */
-int render_vgmstream(sample_t* buffer, int32_t sample_count, VGMSTREAM* vgmstream);
+DECLSPEC int STDCALL render_vgmstream(sample_t* buffer, int32_t sample_count, VGMSTREAM* vgmstream);
+
+/* Added by k-san */
+DECLSPEC int STDCALL render_vgmstream_as_float(float* dst, sample_t* buffer, int32_t sample_count, VGMSTREAM* vgmstream);
+DECLSPEC int STDCALL render_vgmstream_all_as_float(float* dst, VGMSTREAM* vgmstream);
 
 /* Seek to sample position (next render starts from that point). Use only after config is set (vgmstream_apply_config) */
 void seek_vgmstream(VGMSTREAM* vgmstream, int32_t seek_sample);
 
 /* Write a description of the stream into array pointed by desc, which must be length bytes long.
  * Will always be null-terminated if length > 0 */
-void describe_vgmstream(VGMSTREAM* vgmstream, char* desc, int length);
-void describe_vgmstream_info(VGMSTREAM* vgmstream, vgmstream_info* desc);
+DECLSPEC void STDCALL describe_vgmstream(VGMSTREAM* vgmstream, char* desc, int length);
+DECLSPEC void STDCALL describe_vgmstream_info(VGMSTREAM* vgmstream, vgmstream_info* desc);
 
 /* Return the average bitrate in bps of all unique files contained within this stream. */
 int get_vgmstream_average_bitrate(VGMSTREAM* vgmstream);

@@ -395,6 +395,9 @@
     <ClInclude Include="util\text_reader.h">
       <Filter>util\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="extensions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="formats.c">
@@ -2073,6 +2076,9 @@
     </ClCompile>
     <ClCompile Include="util\text_reader.c">
       <Filter>util\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extensions.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

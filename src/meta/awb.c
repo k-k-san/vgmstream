@@ -26,7 +26,8 @@ VGMSTREAM* init_vgmstream_awb_memory(STREAMFILE* sf, STREAMFILE* sf_acb) {
         goto fail;
     /* .awb: standard
      * .afs2: sometimes [Okami HD (PS4)] */
-    if (!check_extensions(sf, "awb,afs2"))
+    //if (!check_extensions(sf, "awb,afs2"))
+    if (0)
         goto fail;
 
     /* 0x04(1): version? 0x01=common, 0x02=2018+ (no apparent differences) */
